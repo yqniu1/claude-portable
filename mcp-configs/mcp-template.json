@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "${CLAUDE_MEMORY_FILE_PATH}"
+      }
+    },
+    "outlook": {
+      "command": "node",
+      "args": ["${OUTLOOK_MCP_PATH}"],
+      "env": {
+        "CLIENT_ID": "${OUTLOOK_CLIENT_ID}",
+        "REDIRECT_URI": "http://localhost:3000/callback",
+        "REDIRECT_PORT": "3000",
+        "TOKEN_FILE": "${OUTLOOK_TOKEN_FILE}"
+      }
+    }
+  }
+}
