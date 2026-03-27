@@ -16,6 +16,13 @@
         "REDIRECT_PORT": "3000",
         "TOKEN_FILE": "${OUTLOOK_TOKEN_FILE}"
       }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
     }
   }
 }
