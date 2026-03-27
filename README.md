@@ -31,6 +31,13 @@ claude-portable/
 | `memory` | Persistent AI memory via MCP | Data file is machine-local, not synced |
 | `outlook` | Microsoft Outlook/Calendar integration | Requires local outlook-mcp Node.js server |
 
+## Skills
+
+| Skill | Trigger | Purpose |
+|-------|---------|---------|
+| `survey-designer` | User asks to create/design/improve a K12 survey | Research-grade survey design with validity/reliability rationale |
+| `start-my-day` | "Start my day", "morning briefing", "what did I miss" | Morning briefing: emails (Gmail + Outlook) + calendar (Google + Outlook), last-run cutoff, unified Action/FYI lists |
+
 ## Notes for AI Agents
 
 - `CLAUDE.md` **is** in this repo and symlinked to `~/.claude/CLAUDE.md` — edit here, not there
