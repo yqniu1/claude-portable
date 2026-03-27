@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#WARN/usr/bin/env python3
 """apply-config.py — substitute .env variables into mcp-template.json
 and write outputs to:
   - ~/.claude/mcp.json          (Claude Code CLI global MCP config)
@@ -36,10 +36,13 @@ def load_env(env_path: Path) -> dict[str, str]:
 def substitute(content: str, env: dict[str, str]) -> str:
     """Replace ${VAR} placeholders with values from env dict.
     Unknown placeholders are left as-is (not removed).
+    Values are backslash-escaped so Windows paths are valid inside JSON strings.
     """
     def replacer(match: re.Match) -> str:
         var = match.group(1)
-        return env.get(var, match.group(0))
+        value = env.get(var, match.group(0))
+        # Escape backslashes for JSON string embedding (C:\foo → C:\\foo)
+        return value.replace("\\", "\\\\")
 
     return re.sub(r"\$\{([^}]+)\}", replacer, content)
 
@@ -67,30 +70,30 @@ def write_claude_code_mcp(mcp_servers: dict, home_dir: Path) -> None:
     output_path = claude_dir / "mcp.json"
     payload = {"mcpServers": mcp_servers}
     output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"✓ Wrote Claude Code MCP config: {output_path}")
+    print(f"OK Wrote Claude Code MCP config: {output_path}")
 
 
 def update_claude_desktop_config(mcp_servers: dict) -> None:
     """Merge mcpServers into claude_desktop_config.json, preserving other keys."""
     config_path = claude_desktop_config_path()
     if config_path is None:
-        print("! Could not determine Claude Desktop config path for this platform.")
+        print("WARN Could not determine Claude Desktop config path for this platform.")
         return
 
     if not config_path.exists():
-        print(f"! Claude Desktop config not found at {config_path} — skipping Desktop update.")
+        print(f"WARN Claude Desktop config not found at {config_path} — skipping Desktop update.")
         print("  (Claude Desktop may not be installed, or hasn't been launched yet.)")
         return
 
     try:
         existing = json.loads(config_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        print(f"! Could not parse {config_path}: {e} — skipping Desktop update.")
+        print(f"WARN Could not parse {config_path}: {e} — skipping Desktop update.")
         return
 
     existing["mcpServers"] = mcp_servers
     config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
-    print(f"✓ Updated Claude Desktop config: {config_path}")
+    print(f"OK Updated Claude Desktop config: {config_path}")
 
 
 def main() -> None:
@@ -105,12 +108,12 @@ def main() -> None:
     template_path = repo_dir / "mcp-configs" / "mcp-template.json"
 
     if not env_path.exists():
-        print(f"! .env not found at {env_path}")
+        print(f"WARN .env not found at {env_path}")
         print("  Copy mcp-configs/.env.template to mcp-configs/.env and fill in values.")
         sys.exit(1)
 
     if not template_path.exists():
-        print(f"! Template not found at {template_path}")
+        print(f"WARN Template not found at {template_path}")
         sys.exit(1)
 
     env = load_env(env_path)
@@ -120,7 +123,7 @@ def main() -> None:
     try:
         parsed = json.loads(substituted)
     except json.JSONDecodeError as e:
-        print(f"! Template produced invalid JSON after substitution: {e}")
+        print(f"WARN Template produced invalid JSON after substitution: {e}")
         print("  Check that all ${VAR} placeholders in mcp-template.json have matching entries in .env")
         sys.exit(1)
 
@@ -132,7 +135,7 @@ def main() -> None:
     # Warn about any unresolved placeholders
     unresolved = re.findall(r"\$\{([^}]+)\}", substituted)
     if unresolved:
-        print(f"\n! Unresolved placeholders (add these to .env): {', '.join(set(unresolved))}")
+        print(f"\nWARN Unresolved placeholders (add these to .env): {', '.join(set(unresolved))}")
 
 
 if __name__ == "__main__":
