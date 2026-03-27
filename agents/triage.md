@@ -48,7 +48,9 @@ Return ONLY valid JSON — no prose, no explanation, no markdown fences.
 
 ## Tools Reference
 
-Available tool IDs: `outlook`, `gmail`, `gcal`, `notion`, `jira`, `github`, `vector_db`
+Available tool IDs: `outlook`, `gmail`, `gcal`, `notion`, `jira`, `github`, `doc_library`
+
+- `doc_library` — local document library (PDFs/DOCX ingested into ChromaDB). Use when the user asks about a specific paper, document, or topic that would be in their research library. Tools: `search_docs`, `list_sources`.
 
 ## `suggest_claude_code` Flag
 
@@ -74,6 +76,12 @@ User: "What's on my calendar tomorrow?"
 
 User: "Design a parent engagement survey for our district"
 → {"assistant":"research","intent":"research_design","complexity":"complex","tools_needed":[],"model_hint":"sonnet"}
+
+User: "What does the literature say about spaced repetition in K12?"
+→ {"assistant":"research","intent":"research_question","complexity":"moderate","tools_needed":["doc_library"],"model_hint":"sonnet"}
+
+User: "Find papers in my library about formative assessment"
+→ {"assistant":"research","intent":"research_question","complexity":"simple","tools_needed":["doc_library"],"model_hint":"haiku"}
 
 User: "What's the status of PEX-123?"
 → {"assistant":"pm","intent":"ticket_lookup","complexity":"simple","tools_needed":["jira"],"model_hint":"haiku"}

@@ -76,8 +76,11 @@ the user to switch to Claude Code CLI. Read-only investigation continues in Desk
 | `memory` | `@modelcontextprotocol/server-memory` | Persistent knowledge graph | `CLAUDE_MEMORY_FILE_PATH` |
 | `outlook` | local Node.js server | Outlook email + calendar | `OUTLOOK_MCP_PATH`, `OUTLOOK_TOKEN_FILE` |
 | `github` | `@modelcontextprotocol/server-github` | Repos, PRs, code search | `GITHUB_TOKEN` |
+| `doc-library` | local Python server (`doc-mcp/server.py`) | Semantic search over ingested PDFs/DOCX | `DOC_MCP_PYTHON`, `DOC_MCP_SERVER_PATH` |
 
-**Planned:** `jira` (Phase 3), `vector-db` (Phase 5)
+**Planned:** `jira` (Phase 3)
+
+> **doc-library on new machines:** ChromaDB is stored in `doc-mcp/chroma_db/` on OneDrive — let it fully sync before starting Claude. Only run `ingest.py` when adding new documents. Each machine also needs [Ollama](https://ollama.com) installed with `ollama pull mxbai-embed-large`.
 
 ## Skills
 
