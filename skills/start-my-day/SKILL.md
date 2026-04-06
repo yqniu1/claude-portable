@@ -29,11 +29,19 @@ Surface what's there. Do not recommend actions or editorialize. The user decides
 {
   "name": "Peter",
   "timezone": "America/New_York",
-  "sources": ["gmail", "outlook", "google_calendar", "outlook_calendar"]
+  "sources": ["gmail", "outlook", "google_calendar", "outlook_calendar", "slack", "jira"],
+  "slack_user_id": "U05K664D078",
+  "slack_workspace": "teachupbeat",
+  "jira_cloud_id": "teachupbeat.atlassian.net"
 }
 ```
 
-**Valid source IDs:** `gmail`, `outlook`, `google_calendar`, `outlook_calendar`
+**Valid source IDs:** `gmail`, `outlook`, `google_calendar`, `outlook_calendar`, `slack`, `jira`
+
+**Optional fields** (needed only if the corresponding source is enabled):
+- `slack_user_id` — your Slack user ID (find via Slack profile → "Copy member ID")
+- `slack_workspace` — Slack workspace subdomain (e.g. `teachupbeat` for teachupbeat.slack.com)
+- `jira_cloud_id` — Atlassian site URL or cloud UUID (e.g. `teachupbeat.atlassian.net`)
 
 **If the file exists**, load `name`, `timezone`, and `sources`. These govern the rest of the skill:
 - `name` → used in the briefing greeting
@@ -177,7 +185,80 @@ Store the current UTC timestamp in memory now — write it back in Step 6.
 
 ---
 
-## Step 5: Write the briefing
+## Step 5: Slack
+
+**Source ID**: `slack`
+
+**Skip condition**: If `slack` is not in `config.sources`, skip this step entirely. No probe, no note in briefing.
+
+**Availability check**: If `slack` is in `config.sources`, attempt `slack_search_public_and_private` with a minimal query. If the tool is unavailable or returns an error, skip this step and add `📭 Slack — not connected` to the briefing's skipped-sources line. Do not abort the skill.
+
+**MCP tools**: `slack_search_public_and_private`, `slack_read_thread`
+
+**Config fields used**: `slack_user_id` (your Slack user ID), `slack_workspace` (workspace name for link construction)
+
+1. Search for DMs and @mentions since the cutoff:
+   - Query: `to:me after:{cutoff as YYYY-MM-DD}`
+   - `sort`: `timestamp`, `sort_dir`: `desc`
+   - `include_context`: `false` (keep response small)
+   - `limit`: 20
+   - `include_bots`: `false`
+
+2. For each result extract:
+   - Sender name
+   - Channel name (or "DM" if `channel_types` is `im`)
+   - One neutral sentence describing what the message is about
+   - Slack link: `https://{config.slack_workspace}.slack.com/archives/{channel_id}/p{message_ts without dot}`
+
+3. Classify each message:
+   - **Action** — asks you a question, requests approval, or needs a reply
+   - **FYI** — informational mention, announcement, or broadcast
+   - **Skip** — bot noise, automated alerts, or messages you already replied to → omit
+
+4. Show max 8 Action, max 5 FYI. If more exist: "…and N more."
+
+5. Merge into the unified Action / FYI lists with account prefix "Slack".
+
+---
+
+## Step 6: Jira
+
+**Source ID**: `jira`
+
+**Skip condition**: If `jira` is not in `config.sources`, skip this step entirely. No probe, no note in briefing.
+
+**Availability check**: If `jira` is in `config.sources`, attempt `searchJiraIssuesUsingJql` with a minimal query. If the tool is unavailable or returns an error, skip this step and add `📭 Jira — not connected` to the briefing's skipped-sources line. Do not abort the skill.
+
+**MCP tools**: `searchJiraIssuesUsingJql`
+
+**Config fields used**: `jira_cloud_id` (the Atlassian site URL or cloud UUID)
+
+1. Search for tickets assigned to the current user that were updated since the cutoff:
+   - JQL: `assignee = currentUser() AND updated >= "{cutoff as YYYY-MM-DD}" ORDER BY updated DESC`
+   - `cloudId`: `config.jira_cloud_id`
+   - `fields`: `["summary", "status", "priority", "issuetype", "project", "updated"]`
+   - `maxResults`: 15
+   - `responseContentFormat`: `markdown`
+
+2. For each ticket extract:
+   - Issue key (e.g. `PD-123`)
+   - Summary (title)
+   - Status and priority
+   - Project name
+   - Jira link: `https://{config.jira_cloud_id}/browse/{issue_key}`
+
+3. Group tickets:
+   - **Needs attention** — status changed TO you (e.g. moved to In Review, assigned), or high/highest priority
+   - **In progress** — tickets you're actively working on (status = In Progress or equivalent)
+   - **Recently updated** — other tickets with activity since cutoff
+
+4. Show max 10 total across groups. If more exist: "…and N more."
+
+5. Present as a standalone section in the briefing (not merged into Action/FYI).
+
+---
+
+## Step 7: Write the briefing
 
 Output directly in chat. No files. No preamble. Start with the header line.
 
@@ -197,10 +278,24 @@ Output directly in chat. No files. No preamble. Start with the header line.
 
 ### 📬 Action Required  ({N} items)
 {account label} · **{Subject}** · {Sender} · {one neutral sentence} · [Open →]({link})
-{If no email sources in config.sources: omit this section entirely}
+{If no email or slack sources in config.sources: omit this section entirely}
+{Slack items use account label "Slack" and link format: https://{workspace}.slack.com/archives/{channel_id}/p{ts}}
 
 ### 📋 FYI  ({N} items)
 {account label} · **{Subject}** · {Sender} · {one neutral sentence} · [Open →]({link})
+
+---
+
+### 🎫 Jira  ({N} tickets)
+{If jira not in config.sources: omit this section entirely}
+**Needs attention**
+{priority icon} · [{issue_key}]({link}) · **{Summary}** · {Status} · {Project}
+
+**In progress**
+{priority icon} · [{issue_key}]({link}) · **{Summary}** · {Status} · {Project}
+
+**Recently updated**
+{priority icon} · [{issue_key}]({link}) · **{Summary}** · {Status} · {Project}
 ```
 
 **Tone rules:**
@@ -211,7 +306,7 @@ Output directly in chat. No files. No preamble. Start with the header line.
 
 ---
 
-## Step 6: Update state file
+## Step 8: Update state file
 
 Write the current UTC timestamp to the state file path from Step 0b:
 
@@ -247,8 +342,8 @@ The pattern for every new step:
 **Output**: merge into the unified Action/FYI lists with account prefix
 ```
 
+**Implemented modules:** `gmail`, `outlook`, `google_calendar`, `outlook_calendar`, `slack`, `jira`
+
 **Modules to add when MCPs are connected:**
-- `slack` — Slack DMs & @mentions → Slack MCP, same cutoff window
-- `jira` — assigned tickets with status changes → Atlassian Rovo MCP
 - `github` — PRs awaiting your review → GitHub MCP
 - `google_drive` — files shared with you since cutoff → Google Drive MCP
