@@ -72,7 +72,13 @@ else
 fi
 
 echo ""
-echo "Done."
+echo "Done. Skills and agents are now available in Claude Code and Cowork."
+echo ""
 echo "  Add a skill:  create skills/<name>/SKILL.md, commit, push"
 echo "  Add an agent: create agents/<name>.md, commit, push"
 echo "  Update MCP:   edit mcp-configs/mcp-template.json, update .env, re-run setup.sh"
+echo ""
+echo "Surface setup:"
+echo "  Claude Code  — ready to go (primary)"
+echo "  Cowork       — ready to go; enable Gmail/Calendar/Slack/Atlassian in settings (secondary)"
+echo "  Desktop chat — manual: create a Project with files from desktop/ (fallback)"

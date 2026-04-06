@@ -9,6 +9,25 @@ description: >
   catchup requests, even if the user just says "what's going on" or "what did I miss".
   Designed to grow: new integrations (Slack, Jira, Linear, GitHub) slot in as modules
   without changing the core structure.
+allowed-tools:
+  - Read
+  - Write
+  - Bash
+  - mcp__claude_ai_Gmail__gmail_get_profile
+  - mcp__claude_ai_Gmail__gmail_search_messages
+  - mcp__claude_ai_Gmail__gmail_read_message
+  - mcp__claude_ai_Gmail__gmail_read_thread
+  - mcp__claude_ai_Google_Calendar__gcal_list_events
+  - mcp__claude_ai_Google_Calendar__gcal_list_calendars
+  - mcp__claude_ai_Slack__slack_search_public_and_private
+  - mcp__claude_ai_Slack__slack_read_thread
+  - mcp__claude_ai_Slack__slack_read_channel
+  - mcp__claude_ai_Atlassian_2__searchJiraIssuesUsingJql
+  - mcp__claude_ai_Atlassian_2__getJiraIssue
+  - mcp__claude_ai_Atlassian_2__atlassianUserInfo
+  - mcp__outlook__list_emails
+  - mcp__outlook__read_email
+  - mcp__outlook__list_calendar_events
 ---
 
 # Start My Day
